@@ -352,4 +352,4 @@ query_lastlogin.txt
 demo/*
 *.csv
 *.json
-
+*.db
