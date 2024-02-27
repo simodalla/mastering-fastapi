@@ -24,6 +24,8 @@ async def create_post(post: UserPostIn):
     data = post.model_dump()
     query = post_table.insert().values(data)
     last_record_id = await database.execute(query)
+    logger.debug(query)
+
     return {**data, "id": last_record_id}
 
 
@@ -41,11 +43,12 @@ async def get_all_posts():
 async def create_comment(comment: CommentIn):
     post = await find_post(comment.post_id)
     if not post:
-        logger.error(f"Post with id {comment.post_id} not found")
         raise HTTPException(status_code=404, detail="Post not found")
     data = comment.model_dump()
     query = comment_table.insert().values(data)
     last_record_id = await database.execute(query)
+    logger.debug(query)
+
     return {**data, "id": last_record_id}
 
 
@@ -65,7 +68,6 @@ async def get_post_with_comment(post_id: int):
 
     post = await find_post(post_id)
     if not post:
-        logger.error(f"Post with id {post_id} not found")
         raise HTTPException(status_code=404, detail="Post not found")
 
     return {
