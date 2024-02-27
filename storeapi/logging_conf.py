@@ -1,7 +1,7 @@
 import logging
 from logging.config import dictConfig
 
-from storeapi.config import DevConfig, config
+from storeapi.config import DevConfig, ProdConfig, config
 
 
 def obfuscated(email: str, obfuscated_length: int) -> str:
@@ -19,6 +19,11 @@ class EmailObfuscationFilter(logging.Filter):
         if "email" in record.__dict__:
             record.email = obfuscated(record.email, self.obfuscated_length)
         return True
+
+
+handlers = ["default", "rotating_file"]
+if isinstance(config, ProdConfig):
+    handlers += ["logtail"]
 
 
 def configure_logging() -> None:
@@ -78,11 +83,7 @@ def configure_logging() -> None:
             "loggers": {
                 "uvicorn": {"handlers": ["default", "rotating_file"], "level": "INFO"},
                 "storeapi": {
-                    "handlers": [
-                        "default",
-                        "rotating_file",
-                        "logtail",
-                    ],
+                    "handlers": handlers,
                     "level": "DEBUG" if isinstance(config, DevConfig) else "INFO",
                     "propagate": False,
                 },
