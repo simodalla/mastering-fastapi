@@ -10,6 +10,7 @@ post_table = sqlalchemy.Table(
     metadata,
     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
     sqlalchemy.Column("body", sqlalchemy.String),
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
 )
 
 user_table = sqlalchemy.Table(
@@ -30,6 +31,7 @@ comment_table = sqlalchemy.Table(
         sqlalchemy.ForeignKey("posts.id"),
         nullable=False,
     ),
+    sqlalchemy.Column("user_id", sqlalchemy.ForeignKey("users.id"), nullable=False),
 )
 
 engine = sqlalchemy.create_engine(
