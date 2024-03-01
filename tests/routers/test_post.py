@@ -157,7 +157,8 @@ async def test_get_post_with_comment(
     response = await async_client.get(f"/post/{created_post['id']}")
 
     assert response.status_code == 200
-    assert response.json() == {"post": created_post, "comments": [created_comment]}
+    breakpoint()
+    assert response.json() == {"post": {**created_post, "likes": 0}, "comments": [created_comment]}
 
 
 @pytest.mark.anyio
