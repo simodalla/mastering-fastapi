@@ -1,6 +1,7 @@
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from storeapi.database import comment_table, database, post_table
 from storeapi.models.posts import Comment, CommentIn, UserPost, UserPostIn, UserPostWithComments
@@ -22,9 +23,8 @@ async def find_post(post_id: int):
 
 
 @router.post("/post", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn, request: Request):
+async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]):
     logger.info("Creating post")
-    current_user: User = await get_current_user(await oauth2_schema(request))  # noqa
 
     data = post.model_dump()
     query = post_table.insert().values(data)
@@ -45,9 +45,10 @@ async def get_all_posts():
 
 
 @router.post("/comment", response_model=Comment, status_code=201)
-async def create_comment(comment: CommentIn, request: Request):
+async def create_comment(
+    comment: CommentIn, current_user: Annotated[User, Depends(get_current_user)]
+):
     logger.info("Creating comment")
-    current_user: User = await get_current_user(await oauth2_schema(request))  # noqa
 
     post = await find_post(comment.post_id)
     if not post:
