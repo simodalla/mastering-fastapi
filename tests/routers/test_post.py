@@ -105,7 +105,7 @@ async def test_create_post_expired_token(
         headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 401
-    assert "Token has exipred" in response.json()["detail"]
+    assert "Token has expired" in response.json()["detail"]
 
 
 @pytest.mark.anyio
