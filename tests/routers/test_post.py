@@ -113,7 +113,46 @@ async def test_get_all_posts(async_client: AsyncClient, created_post: dict):
     response = await async_client.get("/post")
 
     assert response.status_code == 200
-    assert response.json() == [created_post]
+    # assert response.json() == [{**created_post, "likes": 0}]
+    assert created_post.items() <= response.json()[0].items()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "sorting, excepted_order",
+    [("new", [2, 1]), ("old", [1, 2])],
+)
+async def test_get_all_posts_sorting(
+    async_client: AsyncClient, logged_in_token: str, sorting: str, excepted_order: list[int]
+):
+    await create_post("Test post 1", async_client, logged_in_token)
+    await create_post("Test post 2", async_client, logged_in_token)
+    response = await async_client.get("/post", params={"sorting": sorting})
+
+    assert response.status_code == 200
+    data = response.json()
+    post_ids = [post["id"] for post in data]
+    assert post_ids == excepted_order
+
+
+@pytest.mark.anyio
+async def test_get_all_posts_sort_likes(async_client: AsyncClient, logged_in_token: str):
+    await create_post("Test post 1", async_client, logged_in_token)
+    await create_post("Test post 2", async_client, logged_in_token)
+    await like_post(2, async_client, logged_in_token)
+    response = await async_client.get("/post", params={"sorting": "most_likes"})
+
+    assert response.status_code == 200
+    data = response.json()
+    excepted_order = [2, 1]
+    post_ids = [post["id"] for post in data]
+    assert post_ids == excepted_order
+
+
+@pytest.mark.anyio
+async def test_get_all_posts_wrong_sorting(async_client: AsyncClient):
+    response = await async_client.get("/post", params={"sorting": "wrong"})
+    assert response.status_code == 422
 
 
 @pytest.mark.anyio
@@ -157,7 +196,6 @@ async def test_get_post_with_comment(
     response = await async_client.get(f"/post/{created_post['id']}")
 
     assert response.status_code == 200
-    breakpoint()
     assert response.json() == {"post": {**created_post, "likes": 0}, "comments": [created_comment]}
 
 

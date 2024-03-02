@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from typing import Annotated
 
 import sqlalchemy
@@ -13,6 +14,7 @@ from storeapi.models.posts import (
     UserPost,
     UserPostIn,
     UserPostWithComments,
+    UserPostWithLikes,
 )
 from storeapi.models.users import User
 from storeapi.security import get_current_user
@@ -49,11 +51,22 @@ async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(ge
     return {**data, "id": last_record_id}
 
 
-@router.get("/post", response_model=list[UserPost])
-async def get_all_posts():
+class PostSorting(str, Enum):
+    new = "new"
+    old = "old"
+    most_likes = "most_likes"
+
+
+@router.get("/post", response_model=list[UserPostWithLikes])
+async def get_all_posts(sorting: PostSorting = PostSorting.new):
     logger.info("Getting all posts")
 
-    query = post_table.select()
+    if sorting == PostSorting.new:
+        query = select_post_and_like.order_by(post_table.c.id.desc())
+    elif sorting == PostSorting.old:
+        query = select_post_and_like.order_by(post_table.c.id.asc())
+    elif sorting == PostSorting.most_likes:
+        query = select_post_and_like.order_by(sqlalchemy.desc("likes"))
     logger.debug(query)
 
     return await database.fetch_all(query)
@@ -93,7 +106,6 @@ async def get_post_with_comment(post_id: int):
     query = select_post_and_like.where(post_table.c.id == post_id)
     logger.debug(query)
     post = await database.fetch_one(query)
-    breakpoint()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
