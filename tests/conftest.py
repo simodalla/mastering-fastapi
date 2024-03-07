@@ -1,6 +1,6 @@
 import os
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient

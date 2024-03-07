@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request, status
 
+from storeapi import tasks
 from storeapi.database import database, user_table
 from storeapi.models.users import UserIn
 from storeapi.security import (
@@ -12,6 +13,7 @@ from storeapi.security import (
     get_subject_for_token_type,
     get_user,
 )
+from storeapi.tasks import send_user_registration_email
 
 router = APIRouter()
 
@@ -28,13 +30,14 @@ async def register(user: UserIn, request: Request):
     query = user_table.insert().values(email=user.email, password=get_password_hash(user.password))
     logger.debug(query)
     await database.execute(query)
-
-    return {
-        "detail": "User created. Please confirm your email",
-        "confirmation_url": request.url_for(
+    await tasks.send_user_registration_email(
+        user.email,
+        confirmation_url=request.url_for(
             "confirm_email", token=create_confirmation_token(user.email)
         ),
-    }
+    )
+
+    return {"detail": "User created. Please confirm your email"}
 
 
 @router.post("/token")
