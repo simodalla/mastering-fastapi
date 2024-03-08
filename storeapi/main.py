@@ -26,7 +26,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(CorrelationIdMiddleware)
 
 app.include_router(post_router)
-app.include_router(post_router)
+app.include_router(user_router)
 app.include_router(upload_router)
 
 
