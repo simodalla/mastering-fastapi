@@ -27,8 +27,6 @@ def mock_b2_upload_file(mocker):
 # returns a fake file object from the fake filesystem
 @pytest.fixture(autouse=True)
 def aiofiles_mock_open(mocker, fs):
-    import io
-
     mock_open = mocker.patch("aiofiles.open")
 
     @contextlib.asynccontextmanager
