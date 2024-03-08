@@ -1,5 +1,4 @@
 import logging
-from binascii import b2a_base64
 from functools import lru_cache
 
 import b2sdk.v2 as b2
