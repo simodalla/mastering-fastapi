@@ -52,7 +52,7 @@ async def _generate_cute_creature_api(prompt: str):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                " https://api.deepai.org/api/cute-creature-generator",
+                "https://api.deepai.org/api/cute-creature-generator",
                 data={"text": prompt},
                 headers={"api-key": config.DEEPAI_API_KEY},
                 timeout=60,

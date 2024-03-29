@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Annotated
 
 import sqlalchemy
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 
 from storeapi.database import comment_table, database, like_table, post_table
 from storeapi.models.posts import (
@@ -18,6 +18,7 @@ from storeapi.models.posts import (
 )
 from storeapi.models.users import User
 from storeapi.security import get_current_user
+from storeapi.tasks import generate_and_add_to_post
 
 router = APIRouter()
 
@@ -40,13 +41,29 @@ async def find_post(post_id: int):
 
 
 @router.post("/post", response_model=UserPost, status_code=201)
-async def create_post(post: UserPostIn, current_user: Annotated[User, Depends(get_current_user)]):
+async def create_post(
+    post: UserPostIn,
+    current_user: Annotated[User, Depends(get_current_user)],
+    background_tasks: BackgroundTasks,
+    request: Request,
+    prompt: str = None,
+):
     logger.info("Creating post")
 
     data = {**post.model_dump(), "user_id": current_user.id}
     query = post_table.insert().values(data)
-    last_record_id = await database.execute(query)
     logger.debug(query)
+    last_record_id = await database.execute(query)
+
+    if prompt:
+        background_tasks.add_task(
+            generate_and_add_to_post,
+            current_user.email,
+            last_record_id,
+            request.url_for("get_post_with_comments", post_id=last_record_id),
+            database,
+            prompt,
+        )
 
     return {**data, "id": last_record_id}
 
@@ -100,7 +117,7 @@ async def get_comments_on_post(post_id: int):
 
 
 @router.get("/post/{post_id}", response_model=UserPostWithComments)
-async def get_post_with_comment(post_id: int):
+async def get_post_with_comments(post_id: int):
     logger.info("Getting post with comments")
 
     query = select_post_and_like.where(post_table.c.id == post_id)
