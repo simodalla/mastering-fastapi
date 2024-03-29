@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient, Request, Response
 from pytest_mock import MockerFixture
 
+from .helpers import create_post
+
 os.environ["ENV_STATE"] = "test"
 
 from storeapi.database import database, user_table  # noqa: E402
@@ -26,7 +28,7 @@ def client() -> Generator:
 @pytest.fixture(autouse=True)
 async def db() -> AsyncGenerator:
     await database.connect()
-    yield
+    yield database
     await database.disconnect()
 
 
@@ -55,6 +57,13 @@ async def confirmed_user(registered_user: dict) -> dict:
     )
     await database.execute(query)
     return registered_user
+
+
+@pytest.fixture()
+async def created_post(async_client: AsyncClient, logged_in_token: str):
+    return await create_post(
+        body="Test Post", async_client=async_client, logged_in_token=logged_in_token
+    )
 
 
 @pytest.fixture()

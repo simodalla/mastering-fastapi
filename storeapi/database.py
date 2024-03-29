@@ -1,5 +1,5 @@
 import databases
-import sqlalchemy
+import sqlalchemy  # type: ignore
 
 from .config import config
 
@@ -51,6 +51,6 @@ engine = sqlalchemy.create_engine(
 
 metadata.create_all(engine)
 database = databases.Database(
-    config.DATABASE_URL,
+    config.DATABASE_URL,  # type: ignore
     force_rollback=config.DB_FORCE_ROLL_BACK,
 )
