@@ -20,7 +20,7 @@ async def send_simple_email(to: str, subject: str, body: str):
         try:
             response = await client.post(
                 f"https://api.mailgun.net/v3/{config.MAILGUN_DOMAIN}/messages",
-                auth=("api", config.MAIGUN_API_KEY),
+                auth=("api", config.MAILGUN_API_KEY),
                 data={
                     "from": f"Simone Dalla <mailgun@{config.MAILGUN_DOMAIN}>",
                     "to": [to],
